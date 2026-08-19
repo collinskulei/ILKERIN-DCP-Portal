@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { DocumentChecklist, type ChecklistDocument } from "@/components/document-checklist";
 import { WorkdriveLinkEditor } from "@/components/workdrive-link-editor";
 import { CopyLink } from "@/components/copy-link";
+import { PendingUploads } from "@/components/pending-uploads";
 
 const STAGE_LABEL: Record<string, string> = {
   stage_1: "Stage 1 — Approval of Name",
@@ -52,6 +53,17 @@ export default async function CaseDetailPage({
     };
   });
 
+  const { data: pendingUploads } = await supabase
+    .from("pending_uploads")
+    .select("id, zoho_file_name, zoho_uploaded_time")
+    .eq("application_id", id)
+    .eq("status", "pending")
+    .order("created_at", { ascending: true });
+
+  const missingDocuments = documents
+    .filter((doc) => doc.status === "missing")
+    .map((doc) => ({ id: doc.id, item_name: doc.item_name }));
+
   const { data: tasks } = await supabase
     .from("tasks")
     .select("id, title, due_date, status")
@@ -91,6 +103,12 @@ export default async function CaseDetailPage({
             </div>
           )}
         </div>
+
+        <PendingUploads
+          applicationId={id}
+          uploads={pendingUploads ?? []}
+          missingDocuments={missingDocuments}
+        />
 
         <section>
           <h2 className="mb-2 text-sm font-semibold text-zinc-700">Checklist</h2>

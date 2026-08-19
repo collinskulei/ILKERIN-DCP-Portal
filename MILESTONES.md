@@ -99,16 +99,40 @@ unblocked.
 - [ ] Build proper Zoho access-token caching (currently fetches a fresh
       access token on every API call — works fine at this volume, but worth
       caching with expiry once usage grows)
-- [ ] Implement WorkDrive webhook receiver (Supabase Edge Function or Vercel
-      route) for file-upload events
-- [ ] Implement polling fallback (scheduled Edge Function, in case webhooks are
-      missed/unreliable)
-- [ ] Build document-to-checklist matching logic (filename/metadata → checklist
-      item)
-- [ ] On match: mark checklist item "received", log Document record, queue for
-      case-manager verification
-- [ ] Handle unmatched/ambiguous uploads (surface to case manager for manual
-      tagging rather than silently dropping)
+- [x] **Detection: polling built as the primary mechanism** (no webhook yet —
+      see below). `GET /api/cron/poll-workdrive` (`src/app/api/cron/poll-workdrive/route.ts`),
+      scheduled every 15 min via `vercel.json`, secured with a `CRON_SECRET`
+      bearer token (Vercel sends this automatically for its own Cron Jobs
+      once the env var is set — verify this holds on your plan). For each
+      active application, resolves the WorkDrive folder ID from either
+      `zoho_workdrive_folder_id` or by parsing `/folder/{id}` out of
+      `workdrive_folder_url`, lists the folder's files
+      (`listFolderFiles` in `src/lib/zoho.ts`), and inserts any file not
+      already known (checked against both `documents.zoho_file_id` and
+      existing `pending_uploads`) into the new `pending_uploads` table
+      (`0007_pending_uploads.sql`)
+- [x] **Matching: manual, not automatic filename matching** — a case manager
+      picks which checklist item each unmatched upload satisfies. Real
+      end-to-end test (create folder → upload a real file via the Zoho API →
+      poll → match → verify) passed against the live Supabase + Zoho
+      projects. Server actions in `src/app/actions/uploads.ts`
+      (`matchPendingUpload`, `ignorePendingUpload`); UI in
+      `src/components/pending-uploads.tsx`, shown on the case detail page
+      above the checklist
+- [x] **Bug found and fixed while testing**: `proxy.ts`'s matcher didn't
+      exclude `/api/*`, so the auth-redirect middleware would have hijacked
+      the cron route (and any future API route) before its handler ever ran
+      — Vercel Cron would have silently gotten a 307 instead of running the
+      job. Fixed by excluding `api/` from the matcher
+- [x] **Bug found and fixed while testing**: Zoho's file-listing response
+      returns `uploaded_time`/`created_time` as locale display strings with
+      no year (e.g. `"Aug 19, 5:08 pm"`) — unsafe to store as a timestamp.
+      Fixed to use `uploaded_time_in_millisecond` (epoch ms) instead
+- [ ] Implement a real WorkDrive webhook receiver as a faster/primary path
+      (polling every 15 min is the fallback either way, per the original
+      plan) — not yet built
+- [ ] Delete/trash support for pending uploads or documents via the Zoho API
+      hasn't been found/tested yet (only affects cleanup, not the core flow)
 - [ ] **Expiry tracking deliberately deferred**: user chose OCR/document-AI
       (read the issue date off the actual uploaded document) over a manual
       issue-date input, but wants it left dormant for now and activated later

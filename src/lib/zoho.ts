@@ -91,3 +91,48 @@ export async function createClientWorkdriveFolder(
 
   return { folderId, permalink, shareLink };
 }
+
+export type WorkdriveFile = {
+  id: string;
+  name: string;
+  url: string;
+  uploadedTime: string | null;
+};
+
+/**
+ * Lists the direct children of a WorkDrive folder, filtering out subfolders
+ * — clients are expected to drop files directly into their folder, not
+ * create their own subfolder structure.
+ */
+export async function listFolderFiles(folderId: string): Promise<WorkdriveFile[]> {
+  const res = await zohoApi(`/workdrive/api/v1/files/${folderId}/files`, { method: "GET" });
+
+  return (res.data as Array<Record<string, unknown>>)
+    .filter((item) => {
+      const attrs = item.attributes as Record<string, unknown>;
+      return attrs.type !== "folder";
+    })
+    .map((item) => {
+      const attrs = item.attributes as Record<string, unknown>;
+      const uploadedMillis = attrs.uploaded_time_in_millisecond ?? attrs.created_time_in_millisecond;
+
+      return {
+        id: item.id as string,
+        name: attrs.name as string,
+        url: (attrs.permalink as string) ?? (attrs.download_url as string) ?? "",
+        uploadedTime: uploadedMillis ? new Date(Number(uploadedMillis)).toISOString() : null,
+      };
+    });
+}
+
+/**
+ * Extracts a WorkDrive folder ID from a folder link of the form
+ * https://workdrive.zoho.com/folder/{id}. Returns null for any other link
+ * shape (e.g. an external share link), since only the internal folder link
+ * format is guaranteed to embed the raw folder ID.
+ */
+export function extractFolderIdFromUrl(url: string | null): string | null {
+  if (!url) return null;
+  const match = url.match(/\/folder\/([a-zA-Z0-9_-]+)/);
+  return match ? match[1] : null;
+}
