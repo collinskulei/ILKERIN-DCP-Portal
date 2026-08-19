@@ -13,8 +13,18 @@ unblocked.
       requires installable PWA for iOS) — see PLAN.md section 6
 - [x] E-signature confirmed **dropped** — out of scope, no signed-document flow
 - [x] Vercel project and Supabase project created
-- [ ] Obtain Zoho WorkDrive API credentials (client ID/secret) and admin access to
-      configure webhooks
+- [x] Zoho WorkDrive API credentials obtained via a Self Client (Zoho API
+      Console) — client ID/secret + long-lived refresh token generated,
+      verified live against the "Ilkerin & Associates" org
+      (`GET /workdrive/api/v1/users/me` succeeded), scopes: `WorkDrive.files.READ`,
+      `WorkDrive.teamfolders.READ`, `WorkDrive.workspace.READ`,
+      `WorkDrive.organization.READ`. Stored in `.env.local`
+      (`ZOHO_CLIENT_ID`/`ZOHO_CLIENT_SECRET`/`ZOHO_REFRESH_TOKEN`) — **still
+      needs to be added to Vercel's environment variables** before Phase 2
+      code depends on it in production
+- [ ] Get admin access to configure WorkDrive webhooks (separate from the API
+      credentials above — done in the WorkDrive admin UI, or via the
+      Webhooks API using this same token if we go that route in Phase 2)
 - [ ] Get the compliance team's authoritative Stage 1/2/3 document checklist
       (item name, owner tag, expiry rule if any) — this becomes the first real
       data import, not a placeholder
@@ -51,8 +61,9 @@ unblocked.
       (`supabase/migrations/0003_seed_checklist_placeholder.sql`, 11 rows
       confirmed live) — **must be replaced with the real compliance-team
       checklist before the pilot**
-- [ ] Create at least one case-manager user (Supabase Auth + matching
-      `profiles` row) to actually log in and test the dashboard
+- [x] First case-manager user created (Supabase Auth + matching `profiles`
+      row, role `admin`) — credentials shared with user directly, not stored
+      in this repo
 
 ## Phase 2 — Zoho WorkDrive integration
 
@@ -73,13 +84,33 @@ unblocked.
 
 ## Phase 3 — Case manager webapp core
 
-- [ ] Case list view: all active clients, stage, completion %, outstanding items
-- [ ] Case detail view: checklist per stage, document status, owner tags,
-      verification action (approve/reject upload)
-- [ ] Task view: task list per case manager, due dates, linked item drill-down
-- [ ] Manual override actions: mark item received/waived, add ad-hoc task
+- [x] "Add client" flow: company name + starting stage → creates the client,
+      application, and the full checklist (documents) for that stage
+      automatically from `checklist_templates`
+      (`src/app/actions/clients.ts`, `src/components/add-client-dialog.tsx`)
+- [x] Case whiteboard (dashboard) with two switchable views — **Board**
+      (Kanban columns per stage + Complete) and **List** (table) — both
+      backed by a single `application_board` view exposing progress %,
+      item counts, and notification counts (overdue tasks, expiring
+      documents, pending CBK queries) (`src/components/case-board.tsx`)
+- [x] Auto-recalculated `completion_pct` via a Postgres trigger whenever a
+      document's status changes (`0004_progress_and_board.sql`) — verified
+      live (1/6 items verified → 17%)
+- [x] Case detail view: checklist per application with item name, owner tag,
+      status, expiry, and mark received/verify/reject actions
+      (`src/app/cases/[id]/page.tsx`, `src/components/document-checklist.tsx`);
+      also lists tasks and CBK correspondence (empty until Phase 4 populates
+      them)
+- [ ] Task view: dedicated task list per case manager across all their cases
+      (current case detail page only shows tasks for one case)
+- [ ] Add ad-hoc task action (checklist status changes are covered; free-form
+      task creation is not yet built)
 - [ ] Stage-advance automation: when all required items for a stage are
-      verified, auto-advance to next stage and notify case manager
+      verified, auto-advance to next stage, generate next stage's checklist,
+      and notify case manager (completion_pct now tracks this correctly but
+      nothing auto-advances the stage itself yet)
+- [ ] Overview/analytics page across all clients (explicitly deferred by user
+      to a later pass)
 
 ## Phase 4 — Reminders, CBK tracker, fees, push notifications
 
