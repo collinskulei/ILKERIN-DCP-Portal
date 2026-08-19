@@ -67,8 +67,38 @@ unblocked.
 
 ## Phase 2 — Zoho WorkDrive integration
 
-- [ ] Build Zoho OAuth app registration + token refresh handling (stored server-side,
-      e.g. in a Supabase Edge Function or Vercel serverless function)
+- [x] Link an existing WorkDrive folder to a client — for clients already in
+      progress before this app existed. Field: `clients.workdrive_folder_url`
+      (`0005_client_workdrive_link.sql`); settable at Add Client time or later
+      via the case detail page (`src/components/workdrive-link-editor.tsx`)
+      — verified live against Supabase
+- [x] New Zoho Self Client grant issued with write + sharing scopes
+      (`WorkDrive.files.ALL`, `WorkDrive.teamfolders.ALL`,
+      `WorkDrive.teamfolders.sharing.CREATE/READ`, `WorkDrive.links.ALL`),
+      refresh token rotated into `.env.local`
+- [x] Created a dedicated **"Clients" Team Folder** in WorkDrive
+      (id `we29le656a761af504bc89b9a223fd1dcaf30`) as the parent for all new
+      client folders going forward; stored as `ZOHO_CLIENTS_PARENT_FOLDER_ID`
+- [x] Zoho integration helper (`src/lib/zoho.ts`): token refresh + folder
+      creation + upload-permission (`role_id: 7`) external share link
+      creation, verified against the real API
+- [x] Add Client flow now auto-creates a subfolder under "Clients" and an
+      upload share link whenever no existing folder link is provided,
+      storing `zoho_workdrive_folder_id`, `workdrive_folder_url` (internal,
+      case-manager-facing), and `workdrive_share_link` (external,
+      client-facing) on the client record
+      (`0006_client_workdrive_share_link.sql`) — verified live end-to-end;
+      Zoho call failures degrade gracefully (client still gets created, with
+      a warning to link the folder manually instead of blocking)
+- [x] Case detail page shows the client upload link with a copy button
+      (`src/components/copy-link.tsx`)
+- [ ] Note: two test folders ("Test Fintech Ltd", "Auto Folder Test Ltd")
+      were created in the live "Clients" Team Folder while verifying this —
+      couldn't delete via API (delete/trash needs a call we haven't found the
+      right shape for yet), safe to delete manually in the WorkDrive UI
+- [ ] Build proper Zoho access-token caching (currently fetches a fresh
+      access token on every API call — works fine at this volume, but worth
+      caching with expiry once usage grows)
 - [ ] Implement WorkDrive webhook receiver (Supabase Edge Function or Vercel
       route) for file-upload events
 - [ ] Implement polling fallback (scheduled Edge Function, in case webhooks are
@@ -79,8 +109,12 @@ unblocked.
       case-manager verification
 - [ ] Handle unmatched/ambiguous uploads (surface to case manager for manual
       tagging rather than silently dropping)
-- [ ] Implement document expiry tracking (e.g. CRB report 90-day validity) and
-      the "nearing expiry" flag rule
+- [ ] **Expiry tracking deliberately deferred**: user chose OCR/document-AI
+      (read the issue date off the actual uploaded document) over a manual
+      issue-date input, but wants it left dormant for now and activated later
+      — no expiry computation is implemented yet. `documents.expiry_date`
+      and `checklist_templates.expiry_rule_days` already exist in the schema
+      for whichever mechanism lands
 
 ## Phase 3 — Case manager webapp core
 

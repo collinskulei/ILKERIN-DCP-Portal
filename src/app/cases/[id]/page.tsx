@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { DocumentChecklist, type ChecklistDocument } from "@/components/document-checklist";
+import { WorkdriveLinkEditor } from "@/components/workdrive-link-editor";
+import { CopyLink } from "@/components/copy-link";
 
 const STAGE_LABEL: Record<string, string> = {
   stage_1: "Stage 1 — Approval of Name",
@@ -19,7 +21,9 @@ export default async function CaseDetailPage({
 
   const { data: application, error: appError } = await supabase
     .from("applications")
-    .select("id, stage, status, completion_pct, client:clients(company_name)")
+    .select(
+      "id, stage, status, completion_pct, client:clients(id, company_name, workdrive_folder_url, workdrive_share_link)",
+    )
     .eq("id", id)
     .single();
 
@@ -74,6 +78,18 @@ export default async function CaseDetailPage({
           <p className="text-sm text-zinc-500">
             {application.status === "complete" ? "Complete" : STAGE_LABEL[application.stage]}
           </p>
+          {client && (
+            <div className="mt-3 space-y-1">
+              <WorkdriveLinkEditor
+                clientId={client.id}
+                applicationId={id}
+                initialUrl={client.workdrive_folder_url}
+              />
+              {client.workdrive_share_link && (
+                <CopyLink label="Client upload link" url={client.workdrive_share_link} />
+              )}
+            </div>
+          )}
         </div>
 
         <section>

@@ -6,6 +6,7 @@ import { addClient } from "@/app/actions/clients";
 export function AddClientDialog() {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [warning, setWarning] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -13,6 +14,7 @@ export function AddClientDialog() {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     setError(null);
+    setWarning(null);
 
     startTransition(async () => {
       const result = await addClient({}, formData);
@@ -23,6 +25,12 @@ export function AddClientDialog() {
       }
 
       formRef.current?.reset();
+
+      if (result.warning) {
+        setWarning(result.warning);
+        return;
+      }
+
       setOpen(false);
     });
   }
@@ -81,7 +89,26 @@ export function AddClientDialog() {
                 </p>
               </div>
 
+              <div className="space-y-1">
+                <label htmlFor="workdriveFolderUrl" className="text-sm font-medium text-zinc-700">
+                  WorkDrive folder link{" "}
+                  <span className="font-normal text-zinc-400">(optional, for in-progress clients)</span>
+                </label>
+                <input
+                  id="workdriveFolderUrl"
+                  name="workdriveFolderUrl"
+                  type="url"
+                  placeholder="https://workdrive.zoho.com/..."
+                  className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-zinc-500"
+                />
+                <p className="text-xs text-zinc-500">
+                  Leave blank for a brand-new client — a folder will be created automatically once
+                  that&apos;s set up.
+                </p>
+              </div>
+
               {error && <p className="text-sm text-red-600">{error}</p>}
+              {warning && <p className="text-sm text-amber-700">{warning}</p>}
 
               <button
                 type="submit"

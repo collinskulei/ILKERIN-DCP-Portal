@@ -2,8 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createClientWorkdriveFolder } from "@/lib/zoho";
 
-export type AddClientState = { error?: string; success?: boolean };
+export type AddClientState = { error?: string; success?: boolean; warning?: string };
 
 const VALID_STAGES = new Set(["stage_1", "stage_2", "stage_3"]);
 
@@ -13,6 +14,7 @@ export async function addClient(
 ): Promise<AddClientState> {
   const companyName = String(formData.get("companyName") ?? "").trim();
   const stage = String(formData.get("stage") ?? "stage_1");
+  const workdriveFolderUrl = String(formData.get("workdriveFolderUrl") ?? "").trim();
 
   if (!companyName) {
     return { error: "Company name is required." };
@@ -32,12 +34,40 @@ export async function addClient(
 
   const { data: client, error: clientErr } = await supabase
     .from("clients")
-    .insert({ company_name: companyName, case_manager_id: user.id })
+    .insert({
+      company_name: companyName,
+      case_manager_id: user.id,
+      workdrive_folder_url: workdriveFolderUrl || null,
+    })
     .select("id")
     .single();
 
   if (clientErr) {
     return { error: `Could not create client: ${clientErr.message}` };
+  }
+
+  let warning: string | undefined;
+
+  if (!workdriveFolderUrl) {
+    try {
+      const folder = await createClientWorkdriveFolder(companyName);
+      const { error: folderUpdateErr } = await supabase
+        .from("clients")
+        .update({
+          zoho_workdrive_folder_id: folder.folderId,
+          workdrive_folder_url: folder.permalink,
+          workdrive_share_link: folder.shareLink,
+        })
+        .eq("id", client.id);
+
+      if (folderUpdateErr) {
+        warning = `WorkDrive folder was created but could not be saved: ${folderUpdateErr.message}`;
+      }
+    } catch (err) {
+      warning = `Client created, but the WorkDrive folder could not be created automatically (${
+        err instanceof Error ? err.message : String(err)
+      }). Link one manually from the case page.`;
+    }
   }
 
   const { data: application, error: appErr } = await supabase
@@ -75,6 +105,34 @@ export async function addClient(
     }
   }
 
+  revalidatePath("/");
+  return { success: true, warning };
+}
+
+export async function updateWorkdriveFolderUrl(
+  clientId: string,
+  applicationId: string,
+  workdriveFolderUrl: string,
+) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "You must be signed in." };
+  }
+
+  const { error } = await supabase
+    .from("clients")
+    .update({ workdrive_folder_url: workdriveFolderUrl.trim() || null })
+    .eq("id", clientId);
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath(`/cases/${applicationId}`);
   revalidatePath("/");
   return { success: true };
 }
