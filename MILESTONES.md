@@ -234,6 +234,44 @@ unblocked.
       after advancing regardless of whether rows were inserted
       (`0010_fix_completion_after_reduce_advance.sql`). Both verified live:
       advance → back → re-advance → correct 0%, no duplicate documents
+- [x] **Visualize progress**: `/cases/[id]/progress` page — three concentric
+      SVG rings (one per stage; "circle nested gantt" interpreted as a radial
+      completion view rather than a literal date-based Gantt, since stages
+      have no start/end dates in the schema), an overall %, and lists of
+      remaining checklist items and open tasks below. "Visualize" links added
+      on board cards, list rows, and the case detail page
+      (`src/components/progress-rings.tsx`,
+      `src/app/cases/[id]/progress/page.tsx`) — ring math verified via DB
+      script, rendering verified via a real browser screenshot
+- [x] **Guided walkthrough ("Guide me")**: a reusable spotlight+tooltip tour
+      engine (`src/components/guided-tour.tsx`) with steps defined per page —
+      one for the dashboard (Add client → view toggle → stage column →
+      Complete column → sign out) and one for the case detail page (WorkDrive
+      link → Visualize progress → checklist → tasks → CBK log). Verified live
+      in a real browser (login → click "Guide me" → confirmed spotlight and
+      tooltip position, step navigation, and "Skip tour")
+- [x] **`TEST_GUIDE.md`** added — a QA reference listing what to test per
+      feature area, how it was verified (DB script / browser / code-review
+      only), and current pass status. Kept the same document standing for
+      future rounds rather than a one-off
+- [x] **Two real bugs found via this round's browser testing (not the DB
+      scripts) and fixed**: (1) `.animate-fade-in`'s `translateY` keyframe on
+      page-level wrapper divs made those ancestors a CSS containing block for
+      `position: fixed` descendants, silently mispositioning the tour
+      spotlight and the Add Client / Delete Client modals — fixed by making
+      `fade-in` a pure opacity animation; (2) the progress page showed a
+      misleading "27% overall" for a *completed* case that had been started
+      partway through (Stage 3 only, skipping 1/2 as already done outside
+      the app), contradicting the case page's own "100% complete" — fixed by
+      treating any `complete` case as 100% overall regardless of which
+      stages it actually tracked
+- [x] **Browser-testing tooling notes captured** for future sessions (see
+      `TEST_GUIDE.md`'s closing section): the `browser-automation` skill's
+      `--script` flag needs a leading-`/`-before-drive-letter path *and*
+      `MSYS2_ARG_CONV_EXCL="*"` set on Windows/Git Bash, and login forms
+      should be filled via Playwright's `page.locator().fill()` inside a real
+      script rather than `--eval` with direct `.value` assignment (React
+      controlled-input timing makes the latter unreliable)
 - [ ] Task view: dedicated task list per case manager across all their cases
       (current UI only shows tasks scoped to one case)
 - [ ] Notify case manager on auto-advance (no notification channel exists

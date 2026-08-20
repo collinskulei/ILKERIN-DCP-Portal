@@ -74,17 +74,24 @@ function ProgressBar({ pct }: { pct: number }) {
 
 function ClientCard({ row }: { row: ApplicationBoardRow }) {
   return (
-    <Link
-      href={`/cases/${row.application_id}`}
-      className="block space-y-2 rounded-md border border-zinc-200 bg-white p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-md"
-    >
-      <p className="font-medium text-zinc-900">{row.company_name}</p>
-      <ProgressBar pct={row.completion_pct} />
-      <p className="text-xs text-zinc-500">
-        {row.verified_items}/{row.total_items} items verified · {row.case_manager_name ?? "Unassigned"}
-      </p>
-      <NotificationBadges row={row} />
-    </Link>
+    <div className="space-y-2 rounded-md border border-zinc-200 bg-white p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-md">
+      <Link href={`/cases/${row.application_id}`} className="block space-y-2">
+        <p className="font-medium text-zinc-900">{row.company_name}</p>
+        <ProgressBar pct={row.completion_pct} />
+        <p className="text-xs text-zinc-500">
+          {row.verified_items}/{row.total_items} items verified · {row.case_manager_name ?? "Unassigned"}
+        </p>
+      </Link>
+      <div className="flex items-center gap-2">
+        <NotificationBadges row={row} />
+        <Link
+          href={`/cases/${row.application_id}/progress`}
+          className="ml-auto shrink-0 text-xs text-zinc-400 transition-colors hover:text-brand-dark"
+        >
+          Visualize →
+        </Link>
+      </div>
+    </div>
   );
 }
 
@@ -101,6 +108,7 @@ function BoardView({ rows }: { rows: ApplicationBoardRow[] }) {
         return (
           <div
             key={column.key}
+            data-tour={column.key === "stage_1" ? "stage-column" : isComplete ? "complete-column" : undefined}
             className={`rounded-lg p-3 ${isComplete ? "bg-brand-dark/[0.04] ring-1 ring-brand/20" : "bg-zinc-100"}`}
           >
             <div className="mb-3 flex items-baseline justify-between px-1">
@@ -135,6 +143,7 @@ function ListView({ rows }: { rows: ApplicationBoardRow[] }) {
             <th className="px-4 py-2 font-medium">Progress</th>
             <th className="px-4 py-2 font-medium">Case manager</th>
             <th className="px-4 py-2 font-medium">Notifications</th>
+            <th className="px-4 py-2 font-medium"></th>
           </tr>
         </thead>
         <tbody className="divide-y divide-zinc-100">
@@ -163,11 +172,19 @@ function ListView({ rows }: { rows: ApplicationBoardRow[] }) {
               <td className="px-4 py-3">
                 <NotificationBadges row={row} />
               </td>
+              <td className="px-4 py-3">
+                <Link
+                  href={`/cases/${row.application_id}/progress`}
+                  className="text-xs text-zinc-400 transition-colors hover:text-brand-dark"
+                >
+                  Visualize →
+                </Link>
+              </td>
             </tr>
           ))}
           {rows.length === 0 && (
             <tr>
-              <td colSpan={5} className="px-4 py-6 text-center text-sm text-zinc-500">
+              <td colSpan={6} className="px-4 py-6 text-center text-sm text-zinc-500">
                 No clients yet. Add one to get started.
               </td>
             </tr>
@@ -183,7 +200,7 @@ export function CaseBoard({ rows }: { rows: ApplicationBoardRow[] }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-1 rounded-md bg-zinc-100 p-1 text-sm w-fit">
+      <div data-tour="view-toggle" className="flex gap-1 rounded-md bg-zinc-100 p-1 text-sm w-fit">
         {(["board", "list"] as const).map((v) => (
           <button
             key={v}

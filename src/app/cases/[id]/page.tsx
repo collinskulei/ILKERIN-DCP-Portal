@@ -11,6 +11,7 @@ import { ClientNameEditor } from "@/components/client-name-editor";
 import { DeleteClientDialog } from "@/components/delete-client-dialog";
 import { TaskList } from "@/components/task-list";
 import { CbkLog } from "@/components/cbk-log";
+import { GuideMeButton, type TourStep } from "@/components/guided-tour";
 
 const STAGE_LABEL: Record<string, string> = {
   stage_1: "Stage 1 — Approval of Name",
@@ -22,6 +23,34 @@ const PREVIOUS_STAGE: Record<string, string | undefined> = {
   stage_2: "stage_1",
   stage_3: "stage_2",
 };
+
+const CASE_TOUR: TourStep[] = [
+  {
+    selector: '[data-tour="workdrive-link"]',
+    title: "The client's WorkDrive folder",
+    body: "Open the folder yourself, or copy the client-facing upload link to share with them. Nothing here requires the client to log into this app.",
+  },
+  {
+    selector: '[data-tour="visualize-progress"]',
+    title: "Visualize progress",
+    body: "A circular view of progress across all three stages, plus what's still outstanding — handy for a quick status check.",
+  },
+  {
+    selector: '[data-tour="checklist"]',
+    title: "The checklist",
+    body: "Mark items received or verified as documents come in. Once every item in a stage is verified, the case advances to the next stage automatically.",
+  },
+  {
+    selector: '[data-tour="tasks"]',
+    title: "Tasks",
+    body: "Add ad-hoc follow-ups with a due date, and check them off as you go.",
+  },
+  {
+    selector: '[data-tour="cbk-log"]',
+    title: "CBK correspondence",
+    body: "Log a query from CBK — it automatically creates a linked task with the response deadline as its due date.",
+  },
+];
 
 export default async function CaseDetailPage({
   params,
@@ -117,9 +146,12 @@ export default async function CaseDetailPage({
     <div className="flex-1 bg-zinc-50 px-6 py-8">
       <div className="animate-fade-in mx-auto max-w-4xl space-y-6">
         <div>
-          <Link href="/" className="text-sm text-zinc-500 transition-colors hover:text-brand-dark">
-            ← Back to whiteboard
-          </Link>
+          <div className="flex items-baseline justify-between">
+            <Link href="/" className="text-sm text-zinc-500 transition-colors hover:text-brand-dark">
+              ← Back to whiteboard
+            </Link>
+            <GuideMeButton steps={CASE_TOUR} label="Guide me through this case" />
+          </div>
           <div className="mt-2 flex items-baseline justify-between">
             {client && (
               <ClientNameEditor
@@ -135,6 +167,13 @@ export default async function CaseDetailPage({
               {locked ? "Complete" : STAGE_LABEL[application.stage]}
             </p>
             <div className="flex items-center gap-2">
+              <Link
+                data-tour="visualize-progress"
+                href={`/cases/${id}/progress`}
+                className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-600 transition-colors hover:border-brand hover:text-brand-dark"
+              >
+                Visualize progress
+              </Link>
               {!locked && PREVIOUS_STAGE[application.stage] && (
                 <BackStageButton applicationId={id} previousStage={PREVIOUS_STAGE[application.stage]!} />
               )}
@@ -142,7 +181,7 @@ export default async function CaseDetailPage({
             </div>
           </div>
           {client && (
-            <div className="mt-3 space-y-1">
+            <div data-tour="workdrive-link" className="mt-3 space-y-1">
               <WorkdriveLinkEditor
                 clientId={client.id}
                 applicationId={id}
@@ -162,7 +201,7 @@ export default async function CaseDetailPage({
           locked={locked}
         />
 
-        <section>
+        <section data-tour="checklist">
           <h2 className="mb-2 text-sm font-semibold text-zinc-700">Checklist</h2>
           <DocumentChecklist applicationId={id} documents={currentStageDocuments} locked={locked} />
         </section>
@@ -185,12 +224,12 @@ export default async function CaseDetailPage({
           </section>
         )}
 
-        <section>
+        <section data-tour="tasks">
           <h2 className="mb-2 text-sm font-semibold text-zinc-700">Tasks</h2>
           <TaskList applicationId={id} tasks={tasks ?? []} locked={locked} />
         </section>
 
-        <section>
+        <section data-tour="cbk-log">
           <h2 className="mb-2 text-sm font-semibold text-zinc-700">CBK correspondence</h2>
           <CbkLog applicationId={id} entries={cbkCorrespondence ?? []} locked={locked} />
         </section>

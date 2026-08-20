@@ -41,6 +41,7 @@ export function AddClientDialog() {
   return (
     <>
       <button
+        data-tour="add-client"
         onClick={() => setOpen(true)}
         className="rounded-md bg-brand px-4 py-2 text-sm font-medium text-white transition-all hover:bg-brand/90 active:scale-[0.98]"
       >
