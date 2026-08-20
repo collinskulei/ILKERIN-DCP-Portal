@@ -23,9 +23,11 @@ const STATUS_STYLE: Record<string, string> = {
 export function DocumentChecklist({
   applicationId,
   documents,
+  locked = false,
 }: {
   applicationId: string;
   documents: ChecklistDocument[];
+  locked?: boolean;
 }) {
   const [pending, startTransition] = useTransition();
   const router = useRouter();
@@ -63,35 +65,39 @@ export function DocumentChecklist({
               </td>
               <td className="px-4 py-3 text-zinc-600">{doc.expiry_date ?? "—"}</td>
               <td className="px-4 py-3">
-                <div className="flex gap-2">
-                  {doc.status !== "received" && (
-                    <button
-                      disabled={pending}
-                      onClick={() => setStatus(doc.id, "received")}
-                      className="text-xs font-medium text-zinc-600 hover:text-zinc-900 disabled:opacity-50"
-                    >
-                      Mark received
-                    </button>
-                  )}
-                  {doc.status !== "verified" && (
-                    <button
-                      disabled={pending}
-                      onClick={() => setStatus(doc.id, "verified")}
-                      className="text-xs font-medium text-green-700 hover:text-green-900 disabled:opacity-50"
-                    >
-                      Verify
-                    </button>
-                  )}
-                  {doc.status !== "rejected" && (
-                    <button
-                      disabled={pending}
-                      onClick={() => setStatus(doc.id, "rejected")}
-                      className="text-xs font-medium text-red-600 hover:text-red-800 disabled:opacity-50"
-                    >
-                      Reject
-                    </button>
-                  )}
-                </div>
+                {locked ? (
+                  <span className="text-xs text-zinc-400">Locked</span>
+                ) : (
+                  <div className="flex gap-2">
+                    {doc.status !== "received" && (
+                      <button
+                        disabled={pending}
+                        onClick={() => setStatus(doc.id, "received")}
+                        className="text-xs font-medium text-zinc-600 hover:text-zinc-900 disabled:opacity-50"
+                      >
+                        Mark received
+                      </button>
+                    )}
+                    {doc.status !== "verified" && (
+                      <button
+                        disabled={pending}
+                        onClick={() => setStatus(doc.id, "verified")}
+                        className="text-xs font-medium text-green-700 hover:text-green-900 disabled:opacity-50"
+                      >
+                        Verify
+                      </button>
+                    )}
+                    {doc.status !== "rejected" && (
+                      <button
+                        disabled={pending}
+                        onClick={() => setStatus(doc.id, "rejected")}
+                        className="text-xs font-medium text-red-600 hover:text-red-800 disabled:opacity-50"
+                      >
+                        Reject
+                      </button>
+                    )}
+                  </div>
+                )}
               </td>
             </tr>
           ))}

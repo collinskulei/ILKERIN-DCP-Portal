@@ -5,6 +5,9 @@ import { DocumentChecklist, type ChecklistDocument } from "@/components/document
 import { WorkdriveLinkEditor } from "@/components/workdrive-link-editor";
 import { CopyLink } from "@/components/copy-link";
 import { PendingUploads } from "@/components/pending-uploads";
+import { CompleteCaseButton } from "@/components/complete-case-button";
+import { TaskList } from "@/components/task-list";
+import { CbkLog } from "@/components/cbk-log";
 
 const STAGE_LABEL: Record<string, string> = {
   stage_1: "Stage 1 — Approval of Name",
@@ -33,13 +36,16 @@ export default async function CaseDetailPage({
   }
 
   const client = Array.isArray(application.client) ? application.client[0] : application.client;
+  const locked = application.status === "complete";
 
   const { data: documentsRaw } = await supabase
     .from("documents")
-    .select("id, status, owner_tag, expiry_date, checklist_template:checklist_templates(item_name)")
+    .select(
+      "id, status, owner_tag, expiry_date, checklist_template:checklist_templates(item_name, stage)",
+    )
     .eq("application_id", id);
 
-  const documents: ChecklistDocument[] = (documentsRaw ?? []).map((doc) => {
+  const normalizedDocuments = (documentsRaw ?? []).map((doc) => {
     const template = Array.isArray(doc.checklist_template)
       ? doc.checklist_template[0]
       : doc.checklist_template;
@@ -50,8 +56,31 @@ export default async function CaseDetailPage({
       owner_tag: doc.owner_tag,
       expiry_date: doc.expiry_date,
       item_name: template?.item_name ?? "Unknown item",
+      stage: template?.stage,
     };
   });
+
+  const currentStageDocuments: ChecklistDocument[] = normalizedDocuments
+    .filter((doc) => doc.stage === application.stage)
+    .map(({ id, status, owner_tag, expiry_date, item_name }) => ({
+      id,
+      status,
+      owner_tag,
+      expiry_date,
+      item_name,
+    }));
+
+  const previousStages = Object.values(
+    normalizedDocuments
+      .filter((doc) => doc.stage && doc.stage !== application.stage)
+      .reduce<Record<string, { stage: string; total: number; verified: number }>>((acc, doc) => {
+        const stage = doc.stage as string;
+        acc[stage] ??= { stage, total: 0, verified: 0 };
+        acc[stage].total += 1;
+        if (doc.status === "verified") acc[stage].verified += 1;
+        return acc;
+      }, {}),
+  );
 
   const { data: pendingUploads } = await supabase
     .from("pending_uploads")
@@ -60,7 +89,7 @@ export default async function CaseDetailPage({
     .eq("status", "pending")
     .order("created_at", { ascending: true });
 
-  const missingDocuments = documents
+  const missingDocuments = currentStageDocuments
     .filter((doc) => doc.status === "missing")
     .map((doc) => ({ id: doc.id, item_name: doc.item_name }));
 
@@ -72,7 +101,7 @@ export default async function CaseDetailPage({
 
   const { data: cbkCorrespondence } = await supabase
     .from("cbk_correspondence")
-    .select("id, query_text, received_date, response_deadline, response_status")
+    .select("id, query_text, received_date, response_deadline, response_status, response_text")
     .eq("application_id", id)
     .order("received_date", { ascending: false });
 
@@ -87,9 +116,12 @@ export default async function CaseDetailPage({
             <h1 className="text-xl font-semibold text-zinc-900">{client?.company_name}</h1>
             <span className="text-sm text-zinc-500">{application.completion_pct}% complete</span>
           </div>
-          <p className="text-sm text-zinc-500">
-            {application.status === "complete" ? "Complete" : STAGE_LABEL[application.stage]}
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-zinc-500">
+              {locked ? "Complete" : STAGE_LABEL[application.stage]}
+            </p>
+            {!locked && application.stage === "stage_3" && <CompleteCaseButton applicationId={id} />}
+          </div>
           {client && (
             <div className="mt-3 space-y-1">
               <WorkdriveLinkEditor
@@ -108,50 +140,40 @@ export default async function CaseDetailPage({
           applicationId={id}
           uploads={pendingUploads ?? []}
           missingDocuments={missingDocuments}
+          locked={locked}
         />
 
         <section>
           <h2 className="mb-2 text-sm font-semibold text-zinc-700">Checklist</h2>
-          <DocumentChecklist applicationId={id} documents={documents} />
+          <DocumentChecklist applicationId={id} documents={currentStageDocuments} locked={locked} />
         </section>
 
-        <section>
-          <h2 className="mb-2 text-sm font-semibold text-zinc-700">Tasks</h2>
-          <div className="rounded-lg border border-zinc-200 bg-white p-4">
-            {tasks && tasks.length > 0 ? (
-              <ul className="space-y-1 text-sm">
-                {tasks.map((task) => (
-                  <li key={task.id} className="flex justify-between text-zinc-700">
-                    <span>{task.title}</span>
-                    <span className="text-zinc-500">{task.due_date ?? "no due date"} · {task.status}</span>
+        {previousStages.length > 0 && (
+          <section>
+            <h2 className="mb-2 text-sm font-semibold text-zinc-700">Previous stages</h2>
+            <div className="rounded-lg border border-zinc-200 bg-white p-4">
+              <ul className="space-y-1 text-sm text-zinc-600">
+                {previousStages.map((s) => (
+                  <li key={s.stage} className="flex justify-between">
+                    <span>{STAGE_LABEL[s.stage] ?? s.stage}</span>
+                    <span>
+                      {s.verified}/{s.total} verified
+                    </span>
                   </li>
                 ))}
               </ul>
-            ) : (
-              <p className="text-sm text-zinc-500">No tasks yet.</p>
-            )}
-          </div>
+            </div>
+          </section>
+        )}
+
+        <section>
+          <h2 className="mb-2 text-sm font-semibold text-zinc-700">Tasks</h2>
+          <TaskList applicationId={id} tasks={tasks ?? []} locked={locked} />
         </section>
 
         <section>
           <h2 className="mb-2 text-sm font-semibold text-zinc-700">CBK correspondence</h2>
-          <div className="rounded-lg border border-zinc-200 bg-white p-4">
-            {cbkCorrespondence && cbkCorrespondence.length > 0 ? (
-              <ul className="space-y-2 text-sm">
-                {cbkCorrespondence.map((entry) => (
-                  <li key={entry.id} className="text-zinc-700">
-                    <p>{entry.query_text}</p>
-                    <p className="text-xs text-zinc-500">
-                      Received {entry.received_date} · due {entry.response_deadline ?? "—"} ·{" "}
-                      {entry.response_status}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-sm text-zinc-500">No CBK correspondence logged.</p>
-            )}
-          </div>
+          <CbkLog applicationId={id} entries={cbkCorrespondence ?? []} locked={locked} />
         </section>
       </div>
     </div>

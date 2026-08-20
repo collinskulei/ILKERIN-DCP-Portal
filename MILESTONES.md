@@ -156,17 +156,39 @@ unblocked.
       live (1/6 items verified → 17%)
 - [x] Case detail view: checklist per application with item name, owner tag,
       status, expiry, and mark received/verify/reject actions
-      (`src/app/cases/[id]/page.tsx`, `src/components/document-checklist.tsx`);
-      also lists tasks and CBK correspondence (empty until Phase 4 populates
-      them)
+      (`src/app/cases/[id]/page.tsx`, `src/components/document-checklist.tsx`)
+- [x] **Stage-advance automation — fully automatic** (user's choice): a
+      Postgres trigger (`0008_stage_advance_and_scoped_progress.sql`)
+      auto-advances `stage_1 → stage_2 → stage_3` the moment every item in
+      the *current* stage is verified, seeding the next stage's checklist in
+      the same trigger. Stage 3 deliberately does **not** auto-complete the
+      case — see the explicit action below. Progress/counts
+      (`completion_pct`, and `application_board`'s item counts) are now
+      correctly scoped to the current stage only, so a completed prior
+      stage's items don't blend into the new stage's percentage
+- [x] **"Licence received" completion — explicit action** (user's choice):
+      `completeCase` server action (`src/app/actions/cases.ts`) only allowed
+      from Stage 3, sets `status = 'complete'`. Case detail page then locks
+      the checklist, pending uploads, tasks, and CBK log from further edits
+      (`locked` prop threaded through those components)
+- [x] Tasks: add/mark-done UI (`src/components/task-list.tsx`,
+      `src/app/actions/tasks.ts`) — case managers can add ad-hoc tasks and
+      check them off
+- [x] CBK correspondence: log-query / mark-responded UI
+      (`src/components/cbk-log.tsx`, `src/app/actions/cbk.ts`) — logging a
+      query auto-creates a linked task with the response deadline as its due
+      date (per PLAN.md's automation rule); marking responded closes that
+      task automatically
+- [x] Full live test passed: stage_1 fully verified → auto-advanced to
+      stage_2 with correctly reset/scoped progress → stage_2 verified →
+      auto-advanced to stage_3 → stage_3 fully verified but stayed **active**
+      (no auto-complete) → explicit complete action → `status = 'complete'`.
+      Task and CBK flows (including the auto-created linked task) verified
+      in the same run
 - [ ] Task view: dedicated task list per case manager across all their cases
-      (current case detail page only shows tasks for one case)
-- [ ] Add ad-hoc task action (checklist status changes are covered; free-form
-      task creation is not yet built)
-- [ ] Stage-advance automation: when all required items for a stage are
-      verified, auto-advance to next stage, generate next stage's checklist,
-      and notify case manager (completion_pct now tracks this correctly but
-      nothing auto-advances the stage itself yet)
+      (current UI only shows tasks scoped to one case)
+- [ ] Notify case manager on auto-advance (no notification channel exists
+      yet — Phase 4)
 - [ ] Overview/analytics page across all clients (explicitly deferred by user
       to a later pass)
 
@@ -181,8 +203,8 @@ unblocked.
 - [ ] Implement web push (VAPID + service worker, or a managed provider like
       OneSignal/FCM) as a secondary notification channel, triggered from the
       same events as email
-- [ ] CBK correspondence log: record queries, response deadlines, response status
-      — CBK query received auto-creates a task with owner + due date
+- [x] CBK correspondence log — moved up and built in Phase 3 alongside tasks,
+      since the two are tightly linked (see Phase 3)
 - [ ] Fee payment tracking: type, amount, status, receipt reference
 
 ## Phase 5 — Reporting dashboard & polish

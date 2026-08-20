@@ -19,10 +19,12 @@ function UploadRow({
   applicationId,
   upload,
   options,
+  locked,
 }: {
   applicationId: string;
   upload: PendingUpload;
   options: MissingDocumentOption[];
+  locked: boolean;
 }) {
   const [selected, setSelected] = useState(options[0]?.id ?? "");
   const [pending, startTransition] = useTransition();
@@ -57,7 +59,9 @@ function UploadRow({
   return (
     <div className="flex flex-wrap items-center gap-2 border-b border-zinc-100 py-2 text-sm last:border-0">
       <span className="flex-1 font-medium text-zinc-900">{upload.zoho_file_name}</span>
-      {options.length > 0 ? (
+      {locked ? (
+        <span className="text-xs text-zinc-400">Locked</span>
+      ) : options.length > 0 ? (
         <>
           <select
             value={selected}
@@ -81,13 +85,15 @@ function UploadRow({
       ) : (
         <span className="text-xs text-zinc-400">No missing checklist items to match</span>
       )}
-      <button
-        disabled={pending}
-        onClick={ignore}
-        className="text-xs text-zinc-500 hover:text-zinc-700 disabled:opacity-50"
-      >
-        Ignore
-      </button>
+      {!locked && (
+        <button
+          disabled={pending}
+          onClick={ignore}
+          className="text-xs text-zinc-500 hover:text-zinc-700 disabled:opacity-50"
+        >
+          Ignore
+        </button>
+      )}
       {error && <span className="w-full text-xs text-red-600">{error}</span>}
     </div>
   );
@@ -97,10 +103,12 @@ export function PendingUploads({
   applicationId,
   uploads,
   missingDocuments,
+  locked = false,
 }: {
   applicationId: string;
   uploads: PendingUpload[];
   missingDocuments: MissingDocumentOption[];
+  locked?: boolean;
 }) {
   if (uploads.length === 0) return null;
 
@@ -111,7 +119,13 @@ export function PendingUploads({
       </h2>
       <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
         {uploads.map((upload) => (
-          <UploadRow key={upload.id} applicationId={applicationId} upload={upload} options={missingDocuments} />
+          <UploadRow
+            key={upload.id}
+            applicationId={applicationId}
+            upload={upload}
+            options={missingDocuments}
+            locked={locked}
+          />
         ))}
       </div>
     </section>
