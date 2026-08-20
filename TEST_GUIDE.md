@@ -49,7 +49,8 @@ front of a client.
 | Test | Steps | Expected | Status |
 |---|---|---|---|
 | Case page renders | Click into a client from the board | Company name, stage, checklist, tasks, CBK log, danger zone all render | ✅ Pass — Browser screenshot |
-| Mark received / Verify / Reject | Click each action on a checklist item | Status updates, badge color changes | ✅ Pass — DB script |
+| Mark received / Reject | Click each action on a checklist item | Status updates, badge color changes | ✅ Pass — DB script |
+| Verify via checkbox, instant response | Check the "Verified" checkbox on a checklist item | Checkbox and status badge update immediately (optimistic UI, no wait for the network); write persists; unchecking reverts to "received" | ✅ Pass — Browser: checkbox showed checked and badge showed "Verified" in a screenshot taken ~119ms after the click (well under a real network round-trip), confirmed still correct after settling, and confirmed the actual DB `completion_pct` recalculated correctly (0% → 50% for 1 of 2 items) |
 | Auto stage-advance | Verify every item in the current stage | Stage advances (1→2→3), next stage's checklist is seeded, `completion_pct` resets to reflect the new stage | ✅ Pass — DB script, full 1→2→3 progression tested |
 | Stage 3 does not auto-complete | Verify all Stage 3 items | Application stays `active` at 100%, does not flip to `complete` on its own | ✅ Pass — DB script |
 | Explicit case completion | Click "Licence received — Complete case" on a Stage 3 case | `status` becomes `complete`; checklist, uploads, tasks, CBK log all lock from further edits | ✅ Pass — DB script (action logic mirrored); locked "Complete" state confirmed visually on a real completed case |
@@ -59,6 +60,7 @@ front of a client.
 | Delete client, dialog renders & guard blocks wrong input | Open "Delete client", leave the field empty/wrong | Modal centered correctly; Delete button visibly disabled until the exact phrase is typed | ✅ Pass — Browser screenshot (dialog + disabled state confirmed; typing the exact match not attempted, to avoid deleting real data) |
 | Delete client, cascade | Type `delete {exact company name}`, confirm | Client, application, documents, tasks, and CBK correspondence are all removed | ✅ Pass — DB script (cascade confirmed empty on all four tables after delete) |
 | Add/complete task | Add a task with a due date, check it off | Task appears, strikes through when done | ✅ Pass — DB script |
+| Task checkbox is instant | Check a task off | Strikes through immediately, same optimistic pattern as the checklist checkbox | ⚠️ Code review only (same code pattern as the checklist checkbox above, which was browser-verified, but not separately re-tested here) |
 | Log CBK query | Submit a query with a response deadline | Entry appears; a linked task is auto-created with that deadline as its due date | ✅ Pass — DB script |
 | Mark CBK responded | Click "Mark responded", enter a response | Entry shows responded + response text; the linked task auto-closes | ✅ Pass — DB script |
 

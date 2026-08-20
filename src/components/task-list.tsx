@@ -20,10 +20,17 @@ export function TaskList({
   tasks: TaskItem[];
   locked: boolean;
 }) {
+  const [localTasks, setLocalTasks] = useState(tasks);
+  const [prevTasks, setPrevTasks] = useState(tasks);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
+
+  if (tasks !== prevTasks) {
+    setPrevTasks(tasks);
+    setLocalTasks(tasks);
+  }
 
   function handleAdd(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -42,10 +49,16 @@ export function TaskList({
   }
 
   function toggle(taskId: string, currentStatus: string) {
+    const nextStatus = currentStatus === "done" ? "open" : "done";
+
+    setLocalTasks((t) => t.map((task) => (task.id === taskId ? { ...task, status: nextStatus } : task)));
     setError(null);
-    startTransition(async () => {
-      const result = await setTaskStatus(taskId, applicationId, currentStatus === "done" ? "open" : "done");
+
+    setTaskStatus(taskId, applicationId, nextStatus).then((result) => {
       if (result.error) {
+        setLocalTasks((t) =>
+          t.map((task) => (task.id === taskId ? { ...task, status: currentStatus } : task)),
+        );
         setError(result.error);
         return;
       }
@@ -55,15 +68,15 @@ export function TaskList({
 
   return (
     <div className="rounded-lg border border-zinc-200 bg-white p-4">
-      {tasks.length > 0 ? (
+      {localTasks.length > 0 ? (
         <ul className="space-y-1 text-sm">
-          {tasks.map((task) => (
+          {localTasks.map((task) => (
             <li key={task.id} className="flex items-center justify-between gap-2 text-zinc-700">
               <label className="flex flex-1 items-center gap-2">
                 <input
                   type="checkbox"
                   checked={task.status === "done"}
-                  disabled={locked || pending}
+                  disabled={locked}
                   onChange={() => toggle(task.id, task.status)}
                   className="accent-brand"
                 />

@@ -278,6 +278,19 @@ unblocked.
       yet — Phase 4)
 - [ ] Overview/analytics page across all clients (explicitly deferred by user
       to a later pass)
+- [x] **Checkbox for verifying documents + faster response**: the checklist
+      table now has a dedicated "Verified" checkbox (same interaction
+      pattern as the task checkboxes) instead of only a small "Verify" text
+      link. Both `DocumentChecklist` and `TaskList` were converted to
+      optimistic UI — the checkbox/status updates instantly from local
+      state on click, the server write happens in the background, and a
+      non-blocking `router.refresh()` catches up the page's server-derived
+      numbers (stage label, overall %) once it lands, with a revert-on-error
+      path if the write fails. Verified live: a browser screenshot taken
+      ~119ms after clicking the checkbox already showed it checked and the
+      badge updated to "Verified" — well under any real network round-trip —
+      and the actual `completion_pct` in the database was confirmed correct
+      (recalculated 0% → 50%) once the background refresh settled
 
 ## Phase 4 — Reminders, CBK tracker, fees, push notifications
 
