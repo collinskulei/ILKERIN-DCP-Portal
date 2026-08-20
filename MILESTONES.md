@@ -101,9 +101,13 @@ unblocked.
       caching with expiry once usage grows)
 - [x] **Detection: polling built as the primary mechanism** (no webhook yet —
       see below). `GET /api/cron/poll-workdrive` (`src/app/api/cron/poll-workdrive/route.ts`),
-      scheduled every 15 min via `vercel.json`, secured with a `CRON_SECRET`
-      bearer token (Vercel sends this automatically for its own Cron Jobs
-      once the env var is set — verify this holds on your plan). For each
+      secured with a `CRON_SECRET` bearer token (Vercel sends this
+      automatically for its own Cron Jobs once the env var is set). **Runs
+      once daily (`0 6 * * *`)**, not every 15 min as originally built — the
+      Vercel project is on the **Hobby plan**, which caps Cron Jobs at once
+      per day; a more frequent schedule caused/risked failing the whole
+      deployment, not just the cron feature. Upgrading to Pro would allow a
+      tighter interval if faster upload detection matters later. For each
       active application, resolves the WorkDrive folder ID from either
       `zoho_workdrive_folder_id` or by parsing `/folder/{id}` out of
       `workdrive_folder_url`, lists the folder's files
