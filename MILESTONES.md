@@ -189,6 +189,29 @@ unblocked.
       (no auto-complete) → explicit complete action → `status = 'complete'`.
       Task and CBK flows (including the auto-created linked task) verified
       in the same run
+- [x] **Brand colors applied app-wide**: dark charcoal `#212629` and orange
+      `#f85814`, set as Tailwind theme tokens (`brand-dark` / `brand`) in
+      `src/app/globals.css` — used for the new persistent header
+      (`src/components/app-header.tsx`), primary buttons, links, focus rings,
+      progress bar fill, and the Kanban board's "Complete" column accent.
+      Semantic state colors (green=verified, red=rejected/expired,
+      amber=received/pending) were deliberately left alone for clarity
+- [x] **Input text visibility fixed everywhere**: every input/select/textarea
+      now explicitly sets `bg-white text-zinc-900` rather than inheriting
+      color from the page — the previous code relied on inheritance, which
+      combined with `globals.css`'s now-removed `prefers-color-scheme: dark`
+      override could have rendered near-invisible light-on-light text
+- [x] Removed the `prefers-color-scheme: dark` override in `globals.css` —
+      the app now stays on one fixed light palette by design, both for
+      consistent branding and to eliminate the input-visibility risk above
+- [x] Tasteful animations added: modal fade/scale-in, card hover-lift on the
+      board, button press/hover transitions, list-item fade-in — gated behind
+      `prefers-reduced-motion` for the custom keyframes
+- [x] **Confetti on licence completion**: `CompleteCaseButton` now navigates
+      to `/?completed=1` on success instead of just refreshing; the dashboard
+      (`src/components/completion-confetti.tsx`, using `canvas-confetti`)
+      fires a single brand-colored burst on mount when that param is present,
+      then strips it from the URL so a refresh doesn't re-trigger it
 - [ ] Task view: dedicated task list per case manager across all their cases
       (current UI only shows tasks scoped to one case)
 - [ ] Notify case manager on auto-advance (no notification channel exists

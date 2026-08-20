@@ -1,7 +1,9 @@
+import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { SignOutButton } from "@/components/sign-out-button";
 import { AddClientDialog } from "@/components/add-client-dialog";
 import { CaseBoard, type ApplicationBoardRow } from "@/components/case-board";
+import { CompletionConfetti } from "@/components/completion-confetti";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -13,7 +15,10 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex-1 bg-zinc-50 px-6 py-8">
-      <div className="mx-auto max-w-6xl">
+      <Suspense fallback={null}>
+        <CompletionConfetti />
+      </Suspense>
+      <div className="animate-fade-in mx-auto max-w-6xl">
         <div className="mb-6 flex items-baseline justify-between">
           <div>
             <h1 className="text-xl font-semibold text-zinc-900">Case whiteboard</h1>

@@ -21,7 +21,8 @@ export function CompleteCaseButton({ applicationId }: { applicationId: string })
         setError(result.error);
         return;
       }
-      router.refresh();
+      // Navigate back to the dashboard so the completion confetti plays there.
+      router.push("/?completed=1");
     });
   }
 
@@ -30,11 +31,11 @@ export function CompleteCaseButton({ applicationId }: { applicationId: string })
       <button
         onClick={handleClick}
         disabled={pending}
-        className="rounded-md bg-green-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-800 disabled:opacity-50"
+        className="rounded-md bg-green-700 px-3 py-1.5 text-sm font-medium text-white transition-all hover:bg-green-800 active:scale-[0.98] disabled:opacity-50"
       >
         {pending ? "Completing…" : "Licence received — Complete case"}
       </button>
-      {error && <span className="text-xs text-red-600">{error}</span>}
+      {error && <span className="animate-fade-in text-xs text-red-600">{error}</span>}
     </div>
   );
 }

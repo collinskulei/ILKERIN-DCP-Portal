@@ -107,9 +107,9 @@ export default async function CaseDetailPage({
 
   return (
     <div className="flex-1 bg-zinc-50 px-6 py-8">
-      <div className="mx-auto max-w-4xl space-y-6">
+      <div className="animate-fade-in mx-auto max-w-4xl space-y-6">
         <div>
-          <Link href="/" className="text-sm text-zinc-500 hover:text-zinc-700">
+          <Link href="/" className="text-sm text-zinc-500 transition-colors hover:text-brand-dark">
             ← Back to whiteboard
           </Link>
           <div className="mt-2 flex items-baseline justify-between">
@@ -117,7 +117,7 @@ export default async function CaseDetailPage({
             <span className="text-sm text-zinc-500">{application.completion_pct}% complete</span>
           </div>
           <div className="flex items-center justify-between">
-            <p className="text-sm text-zinc-500">
+            <p className={`text-sm font-medium ${locked ? "text-green-700" : "text-brand-dark"}`}>
               {locked ? "Complete" : STAGE_LABEL[application.stage]}
             </p>
             {!locked && application.stage === "stage_3" && <CompleteCaseButton applicationId={id} />}

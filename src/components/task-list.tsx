@@ -65,8 +65,11 @@ export function TaskList({
                   checked={task.status === "done"}
                   disabled={locked || pending}
                   onChange={() => toggle(task.id, task.status)}
+                  className="accent-brand"
                 />
-                <span className={task.status === "done" ? "text-zinc-400 line-through" : ""}>
+                <span
+                  className={`transition-colors ${task.status === "done" ? "text-zinc-400 line-through" : ""}`}
+                >
                   {task.title}
                 </span>
               </label>
@@ -84,17 +87,17 @@ export function TaskList({
             name="title"
             placeholder="New task"
             required
-            className="flex-1 rounded-md border border-zinc-300 px-2 py-1 text-sm outline-none focus:border-zinc-500"
+            className="flex-1 rounded-md border border-zinc-300 bg-white px-2 py-1 text-sm text-zinc-900 placeholder:text-zinc-400 outline-none transition-colors focus:border-brand focus:ring-2 focus:ring-brand/20"
           />
           <input
             name="dueDate"
             type="date"
-            className="rounded-md border border-zinc-300 px-2 py-1 text-sm outline-none focus:border-zinc-500"
+            className="rounded-md border border-zinc-300 bg-white px-2 py-1 text-sm text-zinc-900 outline-none transition-colors focus:border-brand focus:ring-2 focus:ring-brand/20"
           />
           <button
             type="submit"
             disabled={pending}
-            className="rounded-md bg-zinc-900 px-3 py-1 text-xs font-medium text-white hover:bg-zinc-800 disabled:opacity-50"
+            className="rounded-md bg-brand-dark px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-brand-dark/90 disabled:opacity-50"
           >
             Add
           </button>

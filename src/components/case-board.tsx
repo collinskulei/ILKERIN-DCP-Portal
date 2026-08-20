@@ -64,7 +64,10 @@ function NotificationBadges({ row }: { row: ApplicationBoardRow }) {
 function ProgressBar({ pct }: { pct: number }) {
   return (
     <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-200">
-      <div className="h-full rounded-full bg-zinc-900" style={{ width: `${pct}%` }} />
+      <div
+        className="h-full rounded-full bg-brand transition-[width] duration-500 ease-out"
+        style={{ width: `${pct}%` }}
+      />
     </div>
   );
 }
@@ -73,7 +76,7 @@ function ClientCard({ row }: { row: ApplicationBoardRow }) {
   return (
     <Link
       href={`/cases/${row.application_id}`}
-      className="block space-y-2 rounded-md border border-zinc-200 bg-white p-3 shadow-sm hover:border-zinc-300"
+      className="block space-y-2 rounded-md border border-zinc-200 bg-white p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-md"
     >
       <p className="font-medium text-zinc-900">{row.company_name}</p>
       <ProgressBar pct={row.completion_pct} />
@@ -93,10 +96,17 @@ function BoardView({ rows }: { rows: ApplicationBoardRow[] }) {
           column.key === "complete" ? row.application_status === "complete" : row.stage === column.key && row.application_status === "active",
         );
 
+        const isComplete = column.key === "complete";
+
         return (
-          <div key={column.key} className="rounded-lg bg-zinc-100 p-3">
+          <div
+            key={column.key}
+            className={`rounded-lg p-3 ${isComplete ? "bg-brand-dark/[0.04] ring-1 ring-brand/20" : "bg-zinc-100"}`}
+          >
             <div className="mb-3 flex items-baseline justify-between px-1">
-              <h3 className="text-sm font-semibold text-zinc-700">{column.label}</h3>
+              <h3 className={`text-sm font-semibold ${isComplete ? "text-brand-dark" : "text-zinc-700"}`}>
+                {column.label}
+              </h3>
               <span className="text-xs text-zinc-500">{columnRows.length}</span>
             </div>
             <div className="space-y-2">
@@ -131,7 +141,10 @@ function ListView({ rows }: { rows: ApplicationBoardRow[] }) {
           {rows.map((row) => (
             <tr key={row.application_id}>
               <td className="px-4 py-3">
-                <Link href={`/cases/${row.application_id}`} className="font-medium text-zinc-900 hover:underline">
+                <Link
+                  href={`/cases/${row.application_id}`}
+                  className="font-medium text-zinc-900 transition-colors hover:text-brand hover:underline"
+                >
                   {row.company_name}
                 </Link>
               </td>
@@ -175,8 +188,8 @@ export function CaseBoard({ rows }: { rows: ApplicationBoardRow[] }) {
           <button
             key={v}
             onClick={() => setView(v)}
-            className={`rounded-md px-3 py-1 capitalize ${
-              view === v ? "bg-white shadow-sm text-zinc-900" : "text-zinc-500 hover:text-zinc-700"
+            className={`rounded-md px-3 py-1 capitalize transition-colors ${
+              view === v ? "bg-white text-brand-dark shadow-sm" : "text-zinc-500 hover:text-zinc-700"
             }`}
           >
             {v}

@@ -28,7 +28,7 @@ function CbkRow({ entry, applicationId, locked }: { entry: CbkEntry; application
   }
 
   return (
-    <li className="text-zinc-700">
+    <li className="animate-fade-in text-zinc-700">
       <p>{entry.query_text}</p>
       <p className="text-xs text-zinc-500">
         Received {entry.received_date} · due {entry.response_deadline ?? "—"} · {entry.response_status}
@@ -38,7 +38,7 @@ function CbkRow({ entry, applicationId, locked }: { entry: CbkEntry; application
         <button
           disabled={pending}
           onClick={respond}
-          className="mt-1 text-xs font-medium text-zinc-600 hover:text-zinc-900 disabled:opacity-50"
+          className="mt-1 text-xs font-medium text-zinc-600 transition-colors hover:text-brand-dark disabled:opacity-50"
         >
           Mark responded
         </button>
@@ -96,7 +96,7 @@ export function CbkLog({
             placeholder="What did CBK ask?"
             required
             rows={2}
-            className="w-full rounded-md border border-zinc-300 px-2 py-1 text-sm outline-none focus:border-zinc-500"
+            className="w-full rounded-md border border-zinc-300 bg-white px-2 py-1 text-sm text-zinc-900 placeholder:text-zinc-400 outline-none transition-colors focus:border-brand focus:ring-2 focus:ring-brand/20"
           />
           <div className="flex gap-2">
             <label className="flex-1 text-xs text-zinc-500">
@@ -104,7 +104,7 @@ export function CbkLog({
               <input
                 name="receivedDate"
                 type="date"
-                className="mt-0.5 w-full rounded-md border border-zinc-300 px-2 py-1 text-sm outline-none focus:border-zinc-500"
+                className="mt-0.5 w-full rounded-md border border-zinc-300 bg-white px-2 py-1 text-sm text-zinc-900 outline-none transition-colors focus:border-brand focus:ring-2 focus:ring-brand/20"
               />
             </label>
             <label className="flex-1 text-xs text-zinc-500">
@@ -112,14 +112,14 @@ export function CbkLog({
               <input
                 name="responseDeadline"
                 type="date"
-                className="mt-0.5 w-full rounded-md border border-zinc-300 px-2 py-1 text-sm outline-none focus:border-zinc-500"
+                className="mt-0.5 w-full rounded-md border border-zinc-300 bg-white px-2 py-1 text-sm text-zinc-900 outline-none transition-colors focus:border-brand focus:ring-2 focus:ring-brand/20"
               />
             </label>
           </div>
           <button
             type="submit"
             disabled={pending}
-            className="rounded-md bg-zinc-900 px-3 py-1 text-xs font-medium text-white hover:bg-zinc-800 disabled:opacity-50"
+            className="rounded-md bg-brand-dark px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-brand-dark/90 disabled:opacity-50"
           >
             Log query
           </button>

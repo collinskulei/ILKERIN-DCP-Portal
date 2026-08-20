@@ -57,7 +57,7 @@ function UploadRow({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2 border-b border-zinc-100 py-2 text-sm last:border-0">
+    <div className="animate-fade-in flex flex-wrap items-center gap-2 border-b border-zinc-100 py-2 text-sm last:border-0">
       <span className="flex-1 font-medium text-zinc-900">{upload.zoho_file_name}</span>
       {locked ? (
         <span className="text-xs text-zinc-400">Locked</span>
@@ -66,7 +66,7 @@ function UploadRow({
           <select
             value={selected}
             onChange={(e) => setSelected(e.target.value)}
-            className="rounded-md border border-zinc-300 px-2 py-1 text-xs"
+            className="rounded-md border border-zinc-300 bg-white px-2 py-1 text-xs text-zinc-900 outline-none transition-colors focus:border-brand focus:ring-2 focus:ring-brand/20"
           >
             {options.map((opt) => (
               <option key={opt.id} value={opt.id}>
@@ -77,7 +77,7 @@ function UploadRow({
           <button
             disabled={pending}
             onClick={match}
-            className="rounded-md bg-zinc-900 px-2 py-1 text-xs font-medium text-white hover:bg-zinc-800 disabled:opacity-50"
+            className="rounded-md bg-brand-dark px-2 py-1 text-xs font-medium text-white transition-colors hover:bg-brand-dark/90 disabled:opacity-50"
           >
             Match
           </button>
@@ -89,7 +89,7 @@ function UploadRow({
         <button
           disabled={pending}
           onClick={ignore}
-          className="text-xs text-zinc-500 hover:text-zinc-700 disabled:opacity-50"
+          className="text-xs text-zinc-500 transition-colors hover:text-zinc-700 disabled:opacity-50"
         >
           Ignore
         </button>

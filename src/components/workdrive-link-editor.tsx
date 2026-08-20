@@ -40,14 +40,17 @@ export function WorkdriveLinkEditor({
             href={initialUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-zinc-700 underline hover:text-zinc-900"
+            className="text-brand-dark underline transition-colors hover:text-brand"
           >
             Open WorkDrive folder
           </a>
         ) : (
           <span className="text-zinc-400">No WorkDrive folder linked yet</span>
         )}
-        <button onClick={() => setEditing(true)} className="text-xs text-zinc-500 hover:text-zinc-700">
+        <button
+          onClick={() => setEditing(true)}
+          className="text-xs text-zinc-500 transition-colors hover:text-zinc-700"
+        >
           {initialUrl ? "Edit" : "Link folder"}
         </button>
       </div>
@@ -55,25 +58,28 @@ export function WorkdriveLinkEditor({
   }
 
   return (
-    <div className="flex items-center gap-2 text-sm">
+    <div className="animate-fade-in flex items-center gap-2 text-sm">
       <input
         type="url"
         value={value}
         onChange={(e) => setValue(e.target.value)}
         placeholder="https://workdrive.zoho.com/..."
-        className="w-72 rounded-md border border-zinc-300 px-2 py-1 text-sm outline-none focus:border-zinc-500"
+        className="w-72 rounded-md border border-zinc-300 bg-white px-2 py-1 text-sm text-zinc-900 placeholder:text-zinc-400 outline-none transition-colors focus:border-brand focus:ring-2 focus:ring-brand/20"
       />
       <button
         onClick={save}
         disabled={pending}
-        className="rounded-md bg-zinc-900 px-3 py-1 text-xs font-medium text-white hover:bg-zinc-800 disabled:opacity-50"
+        className="rounded-md bg-brand-dark px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-brand-dark/90 disabled:opacity-50"
       >
         {pending ? "Saving…" : "Save"}
       </button>
-      <button onClick={() => setEditing(false)} className="text-xs text-zinc-500 hover:text-zinc-700">
+      <button
+        onClick={() => setEditing(false)}
+        className="text-xs text-zinc-500 transition-colors hover:text-zinc-700"
+      >
         Cancel
       </button>
-      {error && <span className="text-xs text-red-600">{error}</span>}
+      {error && <span className="animate-fade-in text-xs text-red-600">{error}</span>}
     </div>
   );
 }

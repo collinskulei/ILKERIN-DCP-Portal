@@ -53,12 +53,12 @@ export function DocumentChecklist({
         </thead>
         <tbody className="divide-y divide-zinc-100">
           {documents.map((doc) => (
-            <tr key={doc.id}>
+            <tr key={doc.id} className="transition-colors hover:bg-zinc-50">
               <td className="px-4 py-3 text-zinc-900">{doc.item_name}</td>
               <td className="px-4 py-3 text-zinc-600 capitalize">{doc.owner_tag}</td>
               <td className="px-4 py-3">
                 <span
-                  className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${STATUS_STYLE[doc.status] ?? "bg-zinc-100 text-zinc-600"}`}
+                  className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize transition-colors ${STATUS_STYLE[doc.status] ?? "bg-zinc-100 text-zinc-600"}`}
                 >
                   {doc.status}
                 </span>
@@ -73,7 +73,7 @@ export function DocumentChecklist({
                       <button
                         disabled={pending}
                         onClick={() => setStatus(doc.id, "received")}
-                        className="text-xs font-medium text-zinc-600 hover:text-zinc-900 disabled:opacity-50"
+                        className="text-xs font-medium text-zinc-600 transition-colors hover:text-brand-dark disabled:opacity-50"
                       >
                         Mark received
                       </button>
@@ -82,7 +82,7 @@ export function DocumentChecklist({
                       <button
                         disabled={pending}
                         onClick={() => setStatus(doc.id, "verified")}
-                        className="text-xs font-medium text-green-700 hover:text-green-900 disabled:opacity-50"
+                        className="text-xs font-medium text-green-700 transition-colors hover:text-green-900 disabled:opacity-50"
                       >
                         Verify
                       </button>
@@ -91,7 +91,7 @@ export function DocumentChecklist({
                       <button
                         disabled={pending}
                         onClick={() => setStatus(doc.id, "rejected")}
-                        className="text-xs font-medium text-red-600 hover:text-red-800 disabled:opacity-50"
+                        className="text-xs font-medium text-red-600 transition-colors hover:text-red-800 disabled:opacity-50"
                       >
                         Reject
                       </button>
