@@ -291,6 +291,30 @@ unblocked.
       badge updated to "Verified" — well under any real network round-trip —
       and the actual `completion_pct` in the database was confirmed correct
       (recalculated 0% → 50%) once the background refresh settled
+- [x] **Case Manager Guide** added at `/documentation` — a plain-language,
+      non-technical walkthrough of every feature (signing in, the
+      whiteboard, adding a client, the WorkDrive folder, checklist &
+      verifying, unmatched uploads, stages, tasks, CBK log, progress
+      visualization, completing/renaming/deleting a client, and the guided
+      tour), with a sticky table of contents. Made public (added to
+      `PUBLIC_PATHS` in `src/lib/supabase/middleware.ts`) so it's readable
+      before a case manager even has login credentials. Linked from a
+      "📖 Guide" link in the header on every page
+- [x] **Real Ilkerin logo added**: the user supplied the actual brand logo
+      (`Gemini_Generated_Image_6kum6z6kum6z6kum.jpg`) — confirms the
+      `#212629` / `#f85814` brand colors picked earlier were exact matches.
+      Processed with `sharp` (no image-editing tool was otherwise available)
+      to trim the source image's padding, crop the wordmark from the full
+      lockup (dropping the small tagline for header use), and key the white
+      background out to real alpha transparency. **Bug found via browser
+      screenshot, not caught by just looking at the source file**: the
+      logo's dark "ilkerin" ink is nearly the same color as the header's
+      dark background, so it rendered essentially invisible — only the
+      orange survived. Fixed by generating a second "light" variant with
+      the charcoal ink recolored to white (keeping the orange as-is) for
+      use specifically on the dark header; the original dark-ink version
+      stays available in `public/` for light backgrounds. Re-verified via
+      browser screenshot after the fix — wordmark clearly legible
 
 ## Phase 4 — Reminders, CBK tracker, fees, push notifications
 

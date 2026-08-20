@@ -96,6 +96,14 @@ front of a client.
 | Skip / Escape closes tour | Click "Skip tour" or press Escape mid-tour | Tour closes immediately | ✅ Pass — Browser ("Skip tour" click confirmed closing the tour both times it was used) |
 | Tour survives missing target | Start the case-page tour with no CBK entries yet | Still highlights the (empty) CBK section correctly, since the target is the section wrapper, not its contents | ⚠️ Code review only |
 
+## 8. Documentation & branding
+
+| Test | Steps | Expected | Status |
+|---|---|---|---|
+| `/documentation` loads without login | Visit `/documentation` in a fresh/incognito session | Page loads (200), no redirect to `/login` | ✅ Pass — Browser + curl (confirmed 200, not the 307 redirect unauthenticated pages get) |
+| Guide is reachable from every page | Click "📖 Guide" in the header | Navigates to `/documentation` | ✅ Pass — Browser screenshot (link renders and navigates) |
+| Logo legible on the dark header | Load any page | The Ilkerin wordmark (white "ilkerin" + orange flame/"CONSULTING") is clearly visible against the dark header bar | ✅ Pass, after a fix — **real bug found via screenshot**: the logo's dark "ilkerin" ink is nearly the same color as the header background, rendering it essentially invisible (only the orange survived). Fixed by generating a white-ink "light" variant of the wordmark specifically for the dark header; re-verified visible and legible |
+
 ## Summary
 
 **Confirmed working via direct database/API testing:** authentication,
