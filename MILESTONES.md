@@ -212,6 +212,28 @@ unblocked.
       (`src/components/completion-confetti.tsx`, using `canvas-confetti`)
       fires a single brand-colored burst on mount when that param is present,
       then strips it from the URL so a refresh doesn't re-trigger it
+- [x] **Client management**: rename (`ClientNameEditor`, inline edit on the
+      case header), move an active case back a stage (`BackStageButton` +
+      `moveToPreviousStage` action — resets that stage's checklist to
+      `missing` so it requires fresh verification, rather than leaving it
+      falsely 100% and letting the auto-advance trigger immediately send it
+      forward again), and delete a client with a type-to-confirm safety guard
+      (`DeleteClientDialog`, must type `delete {company name}` exactly).
+      Deletion relies on the existing `ON DELETE CASCADE` foreign keys
+      (applications → documents/tasks/cbk_correspondence/pending_uploads all
+      cascade from `clients`), verified live
+- [x] **Two bugs found and fixed while building "back a stage"**:
+      (1) the auto-advance checklist seed wasn't idempotent — re-advancing
+      into a stage whose documents already existed (a back-then-forward
+      cycle) would have inserted duplicate rows; fixed with a `not exists`
+      guard (`0009_idempotent_stage_advance.sql`). (2) that same idempotency
+      fix then meant `completion_pct` stopped being recalculated when the
+      insert was skipped (it was only being recomputed as a side effect of
+      newly inserted rows each firing their own trigger), leaving it stuck
+      at the previous stage's 100%; fixed by explicitly recalculating right
+      after advancing regardless of whether rows were inserted
+      (`0010_fix_completion_after_reduce_advance.sql`). Both verified live:
+      advance → back → re-advance → correct 0%, no duplicate documents
 - [ ] Task view: dedicated task list per case manager across all their cases
       (current UI only shows tasks scoped to one case)
 - [ ] Notify case manager on auto-advance (no notification channel exists

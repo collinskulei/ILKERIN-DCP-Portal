@@ -136,3 +136,57 @@ export async function updateWorkdriveFolderUrl(
   revalidatePath("/");
   return { success: true };
 }
+
+export async function updateClientName(
+  clientId: string,
+  applicationId: string,
+  companyName: string,
+) {
+  const trimmed = companyName.trim();
+
+  if (!trimmed) {
+    return { error: "Company name is required." };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "You must be signed in." };
+  }
+
+  const { error } = await supabase
+    .from("clients")
+    .update({ company_name: trimmed })
+    .eq("id", clientId);
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath(`/cases/${applicationId}`);
+  revalidatePath("/");
+  return { success: true };
+}
+
+export async function deleteClient(clientId: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "You must be signed in." };
+  }
+
+  const { error } = await supabase.from("clients").delete().eq("id", clientId);
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath("/");
+  return { success: true };
+}

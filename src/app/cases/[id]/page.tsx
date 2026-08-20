@@ -6,6 +6,9 @@ import { WorkdriveLinkEditor } from "@/components/workdrive-link-editor";
 import { CopyLink } from "@/components/copy-link";
 import { PendingUploads } from "@/components/pending-uploads";
 import { CompleteCaseButton } from "@/components/complete-case-button";
+import { BackStageButton } from "@/components/back-stage-button";
+import { ClientNameEditor } from "@/components/client-name-editor";
+import { DeleteClientDialog } from "@/components/delete-client-dialog";
 import { TaskList } from "@/components/task-list";
 import { CbkLog } from "@/components/cbk-log";
 
@@ -13,6 +16,11 @@ const STAGE_LABEL: Record<string, string> = {
   stage_1: "Stage 1 — Approval of Name",
   stage_2: "Stage 2 — Application for Licence",
   stage_3: "Stage 3 — Data Submission & Licensing",
+};
+
+const PREVIOUS_STAGE: Record<string, string | undefined> = {
+  stage_2: "stage_1",
+  stage_3: "stage_2",
 };
 
 export default async function CaseDetailPage({
@@ -113,14 +121,25 @@ export default async function CaseDetailPage({
             ← Back to whiteboard
           </Link>
           <div className="mt-2 flex items-baseline justify-between">
-            <h1 className="text-xl font-semibold text-zinc-900">{client?.company_name}</h1>
+            {client && (
+              <ClientNameEditor
+                clientId={client.id}
+                applicationId={id}
+                companyName={client.company_name}
+              />
+            )}
             <span className="text-sm text-zinc-500">{application.completion_pct}% complete</span>
           </div>
           <div className="flex items-center justify-between">
             <p className={`text-sm font-medium ${locked ? "text-green-700" : "text-brand-dark"}`}>
               {locked ? "Complete" : STAGE_LABEL[application.stage]}
             </p>
-            {!locked && application.stage === "stage_3" && <CompleteCaseButton applicationId={id} />}
+            <div className="flex items-center gap-2">
+              {!locked && PREVIOUS_STAGE[application.stage] && (
+                <BackStageButton applicationId={id} previousStage={PREVIOUS_STAGE[application.stage]!} />
+              )}
+              {!locked && application.stage === "stage_3" && <CompleteCaseButton applicationId={id} />}
+            </div>
           </div>
           {client && (
             <div className="mt-3 space-y-1">
@@ -175,6 +194,18 @@ export default async function CaseDetailPage({
           <h2 className="mb-2 text-sm font-semibold text-zinc-700">CBK correspondence</h2>
           <CbkLog applicationId={id} entries={cbkCorrespondence ?? []} locked={locked} />
         </section>
+
+        {client && (
+          <section>
+            <h2 className="mb-2 text-sm font-semibold text-red-700">Danger zone</h2>
+            <div className="flex items-center justify-between rounded-lg border border-red-200 bg-red-50 p-4">
+              <p className="text-sm text-zinc-600">
+                Permanently delete this client and everything tied to their case.
+              </p>
+              <DeleteClientDialog clientId={client.id} companyName={client.company_name} />
+            </div>
+          </section>
+        )}
       </div>
     </div>
   );
